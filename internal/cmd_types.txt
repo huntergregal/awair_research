@@ -1,0 +1,25 @@
+public enum MqttCommandType {
+    TUTORIAL(DeepLinkParser.AUTHORITY_TUTORIAL),
+    DISPLAY("display"),
+    SWITCH(MqttRouter.EVENT_SWITCH),
+    PREFERENCE("preference"),
+    LIGHT_BEACON("light-beacon-mode"),
+    SAFETY_FEATURE("safety-feature-mode"),
+    SET_TIMEZONE("setTimezone"),
+    KNOCKING("knocking"),
+    LED("led"),
+    SOUND("sound"),
+    OTA_UPGRADE(MqttRouter.EVENT_OTA_UPGRADE),
+    WIFI_SCAN("wifi-scan"),
+    SENSOR_SERVER("sensor-server");
+
+    private String type;
+
+    MqttCommandType(String str) {
+        this.type = str;
+    }
+
+    public String getType() {
+        return this.type;
+    }
+}

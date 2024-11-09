@@ -1,0 +1,102 @@
+mobile-app.awair.is
+
+public interface AppService {
+    @DELETE("v1/invitation/{invitee_email}/{space_id}")
+    Observable<Object> deleteInvitedPeople(@Path("invitee_email") String str, @Path("space_id") String str2);
+
+    @DELETE("v1/users/self/spaces/{spaceId}/rooms/{roomId}")
+    Observable<Object> deleteRoomPreference(@Path("spaceId") String str, @Path("roomId") String str2);
+
+    @DELETE("v1/users/self/spaces/{spaceId}")
+    Observable<Object> deleteSpacePreference(@Path("spaceId") String str);
+
+    @DELETE("v1/mobiles/{mobile_type}/{mobile_token}")
+    Observable<Object> deleteToken(@Path("mobile_type") String str, @Path("mobile_token") String str2);
+
+    @POST("v1/users/forgot-password")
+    Observable<Object> forgotPassword(@Body SignUpRequest signUpRequest);
+
+    @GET("v1/notification-settings/{deviceUuid}")
+    Observable<ADeviceNotificationSetting> getDeviceNotificationSetting(@Path("deviceUuid") String str);
+
+    @GET("v1/users/self/settings")
+    Observable<GetDeviceSettingsResponse> getDeviceSettings(@Query("deviceUuid") String str);
+
+    @GET("v1/invitation")
+    Observable<InvitedPeopleResponse> getInvitedPeople(@Query("space_id") String str);
+
+    @GET("v1/users/self/devices/{deviceUuid}/states")
+    Observable<GetIoTStateResponse> getIoTState(@Path("deviceUuid") String str);
+
+    @GET("v1/users/self/devices/{deviceUuid}/metadata")
+    Observable<GetIoTMetaResponse> getIotMetadata(@Path("deviceUuid") String str);
+
+    @POST("v1/users/self/mqtt-token")
+    Observable<MqttTokenResponse> getMqttToken();
+
+    @GET("v1/users/self/inbox-items")
+    Observable<NotificationListResponse> getNotifications(@Query("to") String str, @Query("lang") String str2, @Query("limit") String str3);
+
+    @GET("v1/users/self/spaces/{spaceId}/rooms")
+    Observable<RoomPreferenceResponse> getRoomPreference(@Path("spaceId") String str);
+
+    @GET("v1/rooms")
+    Observable<SpaceRoomTypeResponse> getRoomTypes(@Query("spaceKind") String str, @Query("lang") String str2);
+
+    @GET("v1/spaces")
+    Observable<SpaceRoomTypeResponse> getSpaceTypes(@Query("lang") String str);
+
+    @GET("v1/users/self/spaces")
+    Observable<SpacesResponse> getSpaces();
+
+    @GET("v1/users/self")
+    Observable<AUser> getUser();
+
+    @PATCH("v1/users/self/devices/{deviceUuid}/metadata")
+    Observable<PatchIoTMetaResponse> patchIoTMetadata(@Path("deviceUuid") String str, @Body Object obj);
+
+    @PATCH("v1/users/self")
+    Observable<Object> patchUser(@Body PatchUserRequest patchUserRequest);
+
+    @POST("v1/users/self/devices/{deviceUuid}/states:desire")
+    Observable<PostIoTStateResponse> postDesiredIoTState(@Path("deviceUuid") String str, @Body IoTStateRequest ioTStateRequest);
+
+    @POST("v1/invitation")
+    Observable<Object> postInvitePeople(@Body SpaceInvitationRequest spaceInvitationRequest);
+
+    @POST("v1/users/self/devices/{deviceUuid}/states:report")
+    Observable<PostIoTStateResponse> postReportedIoTState(@Path("deviceUuid") String str, @Body IoTStateRequest ioTStateRequest);
+
+    @POST("v1/users/self/spaces/{spaceId}/rooms")
+    Observable<Room> postRoomPreference(@Body RoomPreferenceRequest roomPreferenceRequest, @Path("spaceId") String str);
+
+    @POST("v1/users/self/spaces")
+    Observable<Space> postSpacePreference(@Body SpacePreferenceRequest spacePreferenceRequest);
+
+    @POST("v1/mobiles")
+    Observable<Object> postToken(@Body TokenRequest tokenRequest);
+
+    @PUT("v1/users/self/devices/{deviceUuid}")
+    Observable<Object> putDevice(@Path("deviceUuid") String str, @Body PutDeviceRequest putDeviceRequest);
+
+    @PUT("v1/notification-settings/{deviceUuid}")
+    Observable<Object> putDeviceNotificationSetting(@Path("deviceUuid") String str, @Body ADeviceNotificationSetting aDeviceNotificationSetting);
+
+    @PUT("v1/users/self/spaces/{spaceId}/rooms/{roomId}")
+    Observable<Room> putRoomPreference(@Body RoomPreferenceRequest roomPreferenceRequest, @Path("spaceId") String str, @Path("roomId") String str2);
+
+    @PUT("v1/users/self/spaces/{spaceId}")
+    Observable<Space> putSpacePreference(@Body SpacePreferenceRequest spacePreferenceRequest, @Path("spaceId") String str);
+
+    @POST("v1/confirmation-email")
+    Observable<Object> resendConfirmEmail(@Body SignUpRequest signUpRequest);
+
+    @POST("v1/users/{userId}/reset-password")
+    Observable<Object> resetPassword(@Path("userId") Integer num, @Body ResetPasswordRequest resetPasswordRequest);
+
+    @POST("v1/users/login")
+    Observable<SignInResponse> signIn(@Body SignUpRequest signUpRequest);
+
+    @POST("v1/users")
+    Observable<SignUpResponse> signUp(@Body SignUpRequest signUpRequest);
+}

@@ -1,0 +1,69 @@
+internal.awair.is
+
+public interface InternalService {
+    @DELETE("v2/users/self/devices/{deviceType}/{deviceId}/ownership")
+    Observable<Object> deleteDevice(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @DELETE("v1/devices/{deviceType}/{deviceId}/functionality")
+    Observable<Object> deleteFunctionality(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1/devices/{deviceType}/{deviceId}/commands/display")
+    Observable<AClockSetting> getClockSetting(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1.1/users/self/devices")
+    Observable<DevicesResponse> getDevices();
+
+    @GET("v1/devices/{deviceType}/{deviceId}/events/display?desc=true&limit=1")
+    Observable<DisplayListResponse> getDisplay(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1/devices/{deviceType}/{deviceId}/functionality")
+    Observable<FunctionalityResponse> getFunctionality(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1/devices/{deviceType}/{deviceId}/events/score?desc=true&limit=1")
+    Observable<AScoreList> getScore(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1.2/users/self/devices/{deviceType}/{deviceId}/sleep-report")
+    Observable<ASleepReport> getSleepReport(@Path("deviceType") String str, @Path("deviceId") Integer num, @Query("lang") String str2, @Query("timestamp") String str3);
+
+    @GET("v1.2/users/self/devices/{deviceType}/{deviceId}/sleep-report/history")
+    Observable<SleepReportHistoryResponse> getSleepReportHistory(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1.2/users/self/devices/{deviceType}/{deviceId}/sleep-report-setting")
+    Observable<ASleepReportSetting> getSleepReportSetting(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1.2/users/self/devices/all/sleep-report-setting")
+    Observable<SleepReportSettingsResponse> getSleepReportSettings();
+
+    @GET("v1/devices/{deviceType}/{deviceId}/events/switch?desc=true&limit=1")
+    Observable<SwitchListResponse> getSwitch(@Path("deviceType") String str, @Path("deviceId") Integer num);
+
+    @GET("v1.1/time")
+    Observable<TimeserverResponse> getTime(@Query("timezone") String str);
+
+    @GET("v1.2/devices/{deviceType}/{deviceId}/timeline")
+    Observable<TimelineResponse> getTimeline(@Path("deviceType") String str, @Path("deviceId") Integer num, @Query("from") String str2, @Query("to") String str3);
+
+    @GET("v1.2/weather")
+    Observable<WeatherResponse> getWeather(@Query("latitude") Double d, @Query("longitude") Double d2);
+
+    @PATCH("v1/users/self/devices/{deviceType}/{deviceId}")
+    Observable<Object> patchDevice(@Path("deviceType") String str, @Path("deviceId") Integer num, @Body PatchDeviceRequest patchDeviceRequest);
+
+    @POST("v1/devices/{deviceType}/{deviceId}/commands/{commandType}")
+    Observable<Object> postCommand(@Path("deviceType") String str, @Path("deviceId") Integer num, @Path("commandType") String str2, @Body Object obj);
+
+    @POST("v1.2/users/{userId}/register-device")
+    Observable<DeviceRegisterResponse> postRegisterDevice(@Path("userId") Integer num, @Body DeviceRegisterRequest deviceRegisterRequest);
+
+    @PUT("v1.2/users/self/devices/{deviceType}/{deviceId}")
+    Observable<Object> putDeviceIntoRoom(@Path("deviceType") String str, @Path("deviceId") Integer num, @Body DeviceIntoRoomRequest deviceIntoRoomRequest);
+
+    @PUT("v1/devices/{deviceType}/{deviceId}/functionality")
+    Observable<Object> putFunctionality(@Path("deviceType") String str, @Path("deviceId") Integer num, @Body Object obj);
+
+    @PUT("v1.2/devices/{deviceType}/{deviceId}/preference")
+    Observable<Object> putPreference(@Path("deviceType") String str, @Path("deviceId") Integer num, @Body PutPreferenceRequest putPreferenceRequest);
+
+    @PUT("v1.2/users/self/devices/{deviceType}/{deviceId}/sleep-report-setting")
+    Observable<Object> putSleepReportSetting(@Path("deviceType") String str, @Path("deviceId") Integer num, @Body ASleepReportSetting aSleepReportSetting);
+}
