@@ -6,6 +6,8 @@ import requests
 import sys
 import os
 import uuid
+import argparse
+import json
 
 from typing import *
 from enum import Enum
@@ -92,6 +94,16 @@ class AwairInternalApi(AwairApi):
     def set_display_mode(self, device, mode: DISPLAY_MODE):
         return self.command(device, CMD.DISPLAY, {"mode": mode})
 
+    def play_sound(self, device, snd_path: str):
+        # Bamboo.mp3, Click.mp3, ...
+        # May need to `rsync` via UART command to populate files
+        args = {"path": snd_path, 
+                'volume': 100,
+                'command': 'play-external'
+                #'command':'play-internal'
+        }
+        return self.command(device, CMD.SOUND, args)
+
     def get_devices(self) -> dict:
         return self.get('/v1.1/users/self/devices', {})['data']
 
@@ -120,16 +132,28 @@ class AwairMqttClient:
     # SUBSCRIBE_TOPICS = ['mqtt_subscribe_battery', 'mqtt_subscribe_display',
     #     'mqtt_subscribe_ota_upgrade', 'mqtt_subscribe_score']
 
-    def __init__(self, mqttToken, device):
+    def __init__(self, mqttToken, device, debug: bool = False):
+        self.debug = debug
         device_id = device['device_id']
         device_type = device['device_type']
 
         prefix = f'device/{device_type}/{device_id}'
+        self.prefix = prefix
         topics = []
         topics.append(f'{prefix}/command/#')
         topics.append(f'{prefix}/event/score')
         topics.append(f'{prefix}/event/network')
         topics.append(f'{prefix}/event/ota-upgrade')
+        topics.append(f'{prefix}/event/display')
+        topics.append(f'{prefix}/event/battery')
+        topics.append(f'{prefix}/event/sys-info')
+        topics.append(f'{prefix}/event/sound')
+        topics.append(f'{prefix}/event/sysctrl')
+            # {'command': 'rsync|reboot|time-sync|voc-cal-reset|factory-reset|'}
+        topics.append(f'{prefix}/event/factory')
+            # {'mode': 'off|t1|t2|pass|fail'}
+        topics.append(f'{prefix}/event/wifi-info')
+        topics.append(f'{prefix}/event/notification')
 
         mqttc = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
@@ -154,7 +178,25 @@ class AwairMqttClient:
         self.mqttc.connect("messaging.awair.is", 8883, 60)
 
     def loop(self) -> None:
-        self.mqttc.loop_forever()
+        actions_done = False
+        self.mqttc.loop_start()
+        while True:
+            if self.debug:
+                embed(colors='linux')
+                break
+            if not actions_done:
+                msg = {
+                    "message":"PWND",
+                    #"display":"test2",
+                    "direction": "1",
+                    "speed": "100",
+                    #"sound_path": "Click.mp3",
+                    #"sound_delay": "0"
+                }
+                self.mqttc.publish(f'{self.prefix}/command/notification', json.dumps(msg))
+                actions_done = True
+            pass
+        self.mqttc.loop_stop()
 
     @staticmethod
     def on_subscribe(client, userdata, mid, reason_code_list, properties):
@@ -189,8 +231,7 @@ class AwairMqttClient:
             for topic in data[0]:
                 print(f'Subscribing: {topic}')
                 client.subscribe(topic)
-            msg = '{"ota-http-progress":"starting"}'
-            client.publish('device/awair-element/93883/event/ota-upgrade', msg)
+            
 
 if __name__ == '__main__':
     # You must create a passwork by using the password reset feature
@@ -203,6 +244,13 @@ if __name__ == '__main__':
         print('export AWAIR_EMAIL="user@youremail.com"')
         print('export AWAIR_PASSWORD="yourpass"')
         sys.exit(0)
+
+    parse = argparse.ArgumentParser()
+    parse.add_argument('-m', '--mqtt', help='Start MQTT session', default=False, action='store_true')
+    parse.add_argument('-r', '--repl', help='Drop to embedded REPL', default=False, action='store_true')
+    parse.add_argument('-d', '--debug_mqtt', help='Drop to embedded REPL in mqtt loop', default=False, action='store_true')
+
+    args = parse.parse_args()
 
     # Login using the mobile api
     mobile_api = AwairMobileApi()
@@ -223,12 +271,10 @@ if __name__ == '__main__':
     # internal_api.set_display_mode(devices[0], DISPLAY_MODE.TEMP)
     # internal_api.set_display_mode(devices[0], DISPLAY_MODE.HUMID)
 
-    # Drop to a REPL
-    # embed(colors='linux')
+    if args.repl:
+        embed(colors='linux')
 
-    do_mqtt = True  # XXX
-    # do_mqtt = False  # XXX
-    if do_mqtt:
-        mqtt_client = AwairMqttClient(mqtt_token, devices[0])
+    if args.mqtt:
+        mqtt_client = AwairMqttClient(mqtt_token, devices[0], debug=args.debug_mqtt)
         mqtt_client.connect()
         mqtt_client.loop()
