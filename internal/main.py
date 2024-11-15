@@ -11,6 +11,7 @@ import json
 
 from typing import *
 from enum import Enum
+from time import sleep
 
 from IPython import embed
 
@@ -177,25 +178,26 @@ class AwairMqttClient:
     def connect(self) -> None:
         self.mqttc.connect("messaging.awair.is", 8883, 60)
 
-    def loop(self) -> None:
-        actions_done = False
+    def loop(self, text_only: str = '') -> None:
         self.mqttc.loop_start()
         while True:
             if self.debug:
                 embed(colors='linux')
                 break
-            if not actions_done:
+            if len(text_only):
                 msg = {
-                    "message":"PWND",
+                    "message": text_only,
+                    #"message":"PWND",
                     #"display":"test2",
-                    "direction": "1",
+                    "direction": "-1", # 1 = left-to-right, -1 = right-to-left(?)
                     "speed": "100",
                     #"sound_path": "Click.mp3",
                     #"sound_delay": "0"
                 }
                 self.mqttc.publish(f'{self.prefix}/command/notification', json.dumps(msg))
-                actions_done = True
+                break
             pass
+        sleep(2)
         self.mqttc.loop_stop()
 
     @staticmethod
@@ -249,6 +251,7 @@ if __name__ == '__main__':
     parse.add_argument('-m', '--mqtt', help='Start MQTT session', default=False, action='store_true')
     parse.add_argument('-r', '--repl', help='Drop to embedded REPL', default=False, action='store_true')
     parse.add_argument('-d', '--debug_mqtt', help='Drop to embedded REPL in mqtt loop', default=False, action='store_true')
+    parse.add_argument('-t', '--text', help='Set scroll text', default='')
 
     args = parse.parse_args()
 
@@ -274,7 +277,8 @@ if __name__ == '__main__':
     if args.repl:
         embed(colors='linux')
 
-    if args.mqtt:
+    if args.mqtt or args.text:
         mqtt_client = AwairMqttClient(mqtt_token, devices[0], debug=args.debug_mqtt)
         mqtt_client.connect()
-        mqtt_client.loop()
+        mqtt_client.loop(text_only=args.text)
+    print('[+] Done!')
