@@ -120,12 +120,24 @@ class AwairMqttClient:
     # SUBSCRIBE_TOPICS = ['mqtt_subscribe_battery', 'mqtt_subscribe_display',
     #     'mqtt_subscribe_ota_upgrade', 'mqtt_subscribe_score']
 
-    def __init__(self, mqttToken):
+    def __init__(self, mqttToken, device):
+        device_id = device['device_id']
+        device_type = device['device_type']
+
+        prefix = f'device/{device_type}/{device_id}'
+        topics = []
+        topics.append(f'{prefix}/command/#')
+        topics.append(f'{prefix}/event/score')
+        topics.append(f'{prefix}/event/network')
+        topics.append(f'{prefix}/event/ota-upgrade')
+
         mqttc = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
             clean_session=True,
             client_id=str(uuid.uuid4())[:22],
-            userdata=[],
+            userdata=[
+                topics
+            ],
         )
 
         mqttc.username_pw_set(mqttToken)
@@ -136,6 +148,7 @@ class AwairMqttClient:
         mqttc.tls_set(certifi.where())
         mqttc.tls_insecure_set(True)
         self.mqttc = mqttc
+
 
     def connect(self) -> None:
         self.mqttc.connect("messaging.awair.is", 8883, 60)
@@ -164,21 +177,20 @@ class AwairMqttClient:
 
     @staticmethod
     def on_message(client, userdata, message):
-        print(f'message: {message}')
-        userdata.append(message.payload)
+        print(f'msg-from: {message.topic}, msg: {message.payload.decode()}')
+        #userdata.append(message.payload)
 
     @staticmethod
-    def on_connect(client, userdata, flags, reason_code, properties):
+    def on_connect(client, data, flags, reason_code, properties):
         if reason_code.is_failure:
             print(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             print('mqtt connected')
-            # XXX No luck with these
-            # client.subscribe("mqtt_subscribe_ota_upgrade", 1)
-            # client.subscribe("/mqtt_subscribe_ota_upgrade")
-            # client.subscribe("mqtt_subscribe_ota_upgrade")
-            # client.subscribe("$SYS/#", 0)
-            # client.subscribe("score/format/json")
+            for topic in data[0]:
+                print(f'Subscribing: {topic}')
+                client.subscribe(topic)
+            msg = '{"ota-http-progress":"starting"}'
+            client.publish('device/awair-element/93883/event/ota-upgrade', msg)
 
 if __name__ == '__main__':
     # You must create a passwork by using the password reset feature
@@ -186,10 +198,18 @@ if __name__ == '__main__':
     email = os.environ.get("AWAIR_EMAIL")
     passwd = os.environ.get("AWAIR_PASSWORD")
 
+    if not email or not passwd:
+        print('required:')
+        print('export AWAIR_EMAIL="user@youremail.com"')
+        print('export AWAIR_PASSWORD="yourpass"')
+        sys.exit(0)
+
     # Login using the mobile api
     mobile_api = AwairMobileApi()
     mobile_api.login(email, passwd)
-
+    print(f'[+] access token: {mobile_api.access_token}')
+    mqtt_token = mobile_api.get_mqtt_token()
+    print(f'[+] MQTT token: {mqtt_token}')
     # Re-use the mobile api access token to login into the
     # internal api >.>
     internal_api = AwairInternalApi(mobile_api.access_token)
@@ -206,10 +226,9 @@ if __name__ == '__main__':
     # Drop to a REPL
     # embed(colors='linux')
 
-    # MQTT not flushed out at this time #
-    if False:
-        mqtt_token = mobile_api.get_mqtt_token()
-        print(f'MQTT token: {mqtt_token}')
-        mqtt_client = AwairMqttClient(mqtt_token)
+    do_mqtt = True  # XXX
+    # do_mqtt = False  # XXX
+    if do_mqtt:
+        mqtt_client = AwairMqttClient(mqtt_token, devices[0])
         mqtt_client.connect()
         mqtt_client.loop()
