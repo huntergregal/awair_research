@@ -54,7 +54,7 @@ class AwairApi:
         self.mqtt_token = None
         self.access_token = access_token
 
-    def get(self, route: str, data: dict):
+    def get(self, route: str, data: dict = {}):
         if self.access_token:
             hdrs = {'Authorization': f'Bearer {self.access_token}'}
             r = requests.get(f'{self.url}{route}', json=data, headers=hdrs)
@@ -62,9 +62,12 @@ class AwairApi:
             r = requests.get(f'{self.url}{route}', json=data)
         if not r.ok:
             raise Exception(f'req failed: {self.url}{route}')
-        return r.json()
+        try:
+            return r.json()
+        except requests.JSONDecodeError:
+            return {'resp':r.text}
 
-    def post(self, route: str, data: dict):
+    def post(self, route: str, data: dict = {}):
         if self.access_token:
             hdrs = {'Authorization': f'Bearer {self.access_token}'}
             r = requests.post(f'{self.url}{route}', json=data, headers=hdrs)
@@ -73,6 +76,20 @@ class AwairApi:
         if not r.ok:
             raise Exception(f'req failed: {self.url}{route}, resp: {r.text}')
         return r.json()
+
+class AwairLocalApi(AwairApi):
+    def __init__(self, host: str):
+            super().__init__(f'http://{host}')
+
+    def get(self, route: str, data: dict ={}):
+        r = requests.get(f'{self.url}{route}', params=data)
+        try:
+            return r.json()
+        except requests.JSONDecodeError:
+            return {'resp':r.text}
+
+    def set_display_text(self, text: str):
+        self.get(f'/display-message', {'text':text})
 
 class AwairInternalApi(AwairApi):
     def __init__(self, access_token: str):
@@ -269,10 +286,17 @@ if __name__ == '__main__':
     print('[+] Found devices via internal API:')
     print(devices)
 
+    #
     # Example of modifying display mode via the internal API
-
+    #
     # internal_api.set_display_mode(devices[0], DISPLAY_MODE.TEMP)
     # internal_api.set_display_mode(devices[0], DISPLAY_MODE.HUMID)
+
+    #
+    # Example setting LED text via local api
+    #
+    # local_api = AwairLocalApi('192.168.1.228')
+    # local_api.set_display_text('PWND')
 
     if args.repl:
         embed(colors='linux')
